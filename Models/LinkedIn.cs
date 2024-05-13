@@ -54,6 +54,10 @@ public class LinkedIn
         int follows = 0;
         while (follows < 1000)
         {
+
+            if (IsLimitAlert())
+                break;
+
             WebDriverWait waitToLoad = new WebDriverWait(driver, TimeSpan.FromSeconds(1000));
 
             waitToLoad.Until(driver => driver.FindElements(By.ClassName("discover-sections-list__item")).Count > 0);
@@ -65,14 +69,13 @@ public class LinkedIn
             });
 
             var followBtns = driver.FindElements(By.CssSelector("div.artdeco-modal__content ul.discover-fluid-entity-list button"));
-            Console.WriteLine($"FollowBtns: {followBtns.Count}");
 
             foreach (var btn in followBtns)
             {
                 if (btn.Text == "Follow" || btn.Text == "Connect")
                 {
                     Thread.Sleep(300);
-                    Console.WriteLine($"Follow: {btn.GetAttribute("aria-label")}");
+                    Console.WriteLine($"{btn.GetAttribute("aria-label")}");
                     btn.Click();
                     DriverManager.ScrollToElement(driver, modal);
                     follows++;
@@ -80,6 +83,25 @@ public class LinkedIn
             }
             DriverManager.ScrollDivDown(driver, modal, 500);
         }
+
+        Console.WriteLine($"Follows: {follows}");
+    }
+
+    private bool IsLimitAlert()
+    {
+        try
+        {
+
+            var limitDialog = driver.FindElement(By.CssSelector("h2.ip-fuse-limit-alert__header"));
+
+            var closeDialog = driver.FindElement(By.CssSelector("h2.ip-fuse-limit-alert__header button"));
+            closeDialog.Click();
+        }
+        catch (NoSuchElementException)
+        {
+            return false;
+        }
+        return true;
     }
 
     private void OpenFollowDialog()
@@ -89,8 +111,7 @@ public class LinkedIn
         {
             if (btn.Text == "See all")
             {
-                DriverManager.ScrollDown(driver, 200);
-                DriverManager.ScrollToElement(driver, btn);
+                DriverManager.ScrollToElement(driver, btn, 300);
                 btn.Click();
                 break;
             }
